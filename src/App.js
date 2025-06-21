@@ -52,6 +52,18 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedData));
     console.log('ironman localStorage ', localStorage.getItem(LOCAL_STORAGE_KEY));
   }
+
+  async function  handleNext() {
+    setLoading(true);
+    const nextQ = await fetchQuestion(question.id + 1);
+    setQuestion(nextQ);
+    setLoading(false);
+    // store the fetched question in localStorage
+    const storedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+    storedData[nextQ.id] = { question: nextQ, selected: null };
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedData));
+    console.log('ironman localStorage ', localStorage.getItem(LOCAL_STORAGE_KEY));
+  }
   return (
     <div className="p-4 font-sans max-w-xl mx-auto">
       <Header />
@@ -65,7 +77,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
       ) : (
         <OptionsGrid options={question.options} onSelect={handleOptionSelect} selected={selected} />
       )}
-      <NavigationButtons total={5} />
+      <NavigationButtons total={5} onNext={handleNext} />
     </div>
   );
 }
