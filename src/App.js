@@ -25,7 +25,16 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
   // Implement me! You are given a skeleton and its your
   // job to fill it up with 💡 missing props and handlers!
   // (no more components need to be added or the structure changed)
-  const loading = true;
+  const [loading, setLoading] = useState(true);
+  const [question, setQuestion] = useState(null);
+  useEffect(() => {
+    const fetchQ = async () => {
+      setQuestion(await fetchQuestion(0));
+      setLoading(false);
+      console.log('ironman question', question);
+    }
+    fetchQ();
+  }, []);
 
   return (
     <div className="p-4 font-sans max-w-xl mx-auto">
@@ -38,7 +47,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
           Loading next question...
         </div>
       ) : (
-        <OptionsGrid />
+        <OptionsGrid options={question.options} />
       )}
       <NavigationButtons total={5} />
     </div>
