@@ -55,14 +55,28 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
 
   async function  handleNext() {
     setLoading(true);
+    setSelected(null);
     const nextQ = await fetchQuestion(question.id + 1);
+    let prevQuestionId = question.id;
+
     setQuestion(nextQ);
     setLoading(false);
     // store the fetched question in localStorage
     const storedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
-    storedData[nextQ.id] = { question: nextQ, selected: null };
+    storedData[nextQ.id] = { question: nextQ, selected: null, prevQuestionId: prevQuestionId };
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedData));
     console.log('ironman localStorage ', localStorage.getItem(LOCAL_STORAGE_KEY));
+  }
+
+  function handlePrev() {
+      const storedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+      let prevQuestionId = storedData[question.id].prevQuestionId;
+      if (prevQuestionId === null) return;
+      const prevQ = storedData[prevQuestionId];
+      setQuestion(prevQ.question);
+      setSelected(prevQ.selected);
+      prevQuestionId = prevQ.prevQuestionId;
+      console.log('ironman localStorage ', localStorage.getItem(LOCAL_STORAGE_KEY));
   }
   return (
     <div className="p-4 font-sans max-w-xl mx-auto">
@@ -77,7 +91,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
       ) : (
         <OptionsGrid options={question.options} onSelect={handleOptionSelect} selected={selected} />
       )}
-      <NavigationButtons total={5} onNext={handleNext} />
+      <NavigationButtons total={5} onNext={handleNext} onPrev={handlePrev}/>
     </div>
   );
 }
