@@ -27,15 +27,31 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
   // (no more components need to be added or the structure changed)
   const [loading, setLoading] = useState(true);
   const [question, setQuestion] = useState(null);
+  const [selected, setSelected] = useState(null);
   useEffect(() => {
     const fetchQ = async () => {
-      setQuestion(await fetchQuestion(0));
+      const question = await fetchQuestion(0);
+      setQuestion(question);
+      // store the fetched question in localStorage 
+      // the value format should be {id: question, selected: null}
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(
+        { [question.id]: { question: question, selected: null }}
+      )
+      );
       setLoading(false);
       console.log('ironman question', question);
+      console.log('ironman localStorage ', localStorage.getItem(LOCAL_STORAGE_KEY));
     }
     fetchQ();
   }, []);
-
+  function handleOptionSelect(index) {
+    setSelected(index);
+    const storedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+    const ques = storedData[question.id];
+    ques.selected = index;
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedData));
+    console.log('ironman localStorage ', localStorage.getItem(LOCAL_STORAGE_KEY));
+  }
   return (
     <div className="p-4 font-sans max-w-xl mx-auto">
       <Header />
@@ -47,7 +63,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
           Loading next question...
         </div>
       ) : (
-        <OptionsGrid options={question.options} />
+        <OptionsGrid options={question.options} onSelect={handleOptionSelect} selected={selected} />
       )}
       <NavigationButtons total={5} />
     </div>
