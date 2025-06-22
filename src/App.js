@@ -27,6 +27,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
   // (no more components need to be added or the structure changed)
   const [loading, setLoading] = useState(true);
   const [question, setQuestion] = useState(null);
+  let timer = useRef(true);
   const [selected, setSelected] = useState(null);
   useEffect(() => {
     const fetchQ = async () => {
@@ -45,6 +46,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
     fetchQ();
   }, []);
   function handleOptionSelect(index) {
+    if (!timer.current) return;
     setSelected(index);
     const storedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
     const ques = storedData[question.id];
@@ -81,15 +83,20 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
   return (
     <div className="p-4 font-sans max-w-xl mx-auto">
       <Header />
-      <QuestionPanel loading={loading}>
-        <Timer duration={maxTimePerQuestion} />
+      <QuestionPanel loading={loading} question={question}>
+        <Timer 
+          duration={maxTimePerQuestion} 
+          onExpire={() => {
+            timer.current = false;
+          }} 
+        />
       </QuestionPanel>
       {loading ? (
         <div className="text-center text-gray-500 mb-6">
           Loading next question...
         </div>
       ) : (
-        <OptionsGrid options={question.options} onSelect={handleOptionSelect} selected={selected} />
+        <OptionsGrid options={question.options} onSelect={handleOptionSelect} selected={selected}  />
       )}
       <NavigationButtons total={5} onNext={handleNext} onPrev={handlePrev}/>
     </div>
