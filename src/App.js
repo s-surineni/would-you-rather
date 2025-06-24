@@ -61,7 +61,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
     setLoading(true);
     setSelected(null);
     
-    const nextQ = await fetchQuestion(question.id + 1);
+    let nextQ = await fetchQuestion(question.id + 1);
     let prevQuestionId = question.id;
 
     // Check if this is a new question or a revisited one
@@ -71,6 +71,9 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
     if (isNewQuestion) {
       timer.current = true; // Reset timer state only for new questions
       setTimerResetKey(nextQ.id); // Use question ID as reset key for new questions
+    } else {
+      nextQ = storedData[nextQ.id].question;
+      setSelected(storedData[nextQ.id].selected);
     }
 
     setQuestion(nextQ);
