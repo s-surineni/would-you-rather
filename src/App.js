@@ -29,6 +29,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
   const [question, setQuestion] = useState(null);
   let timer = useRef(true);
   const [selected, setSelected] = useState(null);
+  const [timerResetKey, setTimerResetKey] = useState(0);
   useEffect(() => {
     const fetchQ = async () => {
       const question = await fetchQuestion(0);
@@ -58,14 +59,29 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
   async function  handleNext() {
     setLoading(true);
     setSelected(null);
+    
     const nextQ = await fetchQuestion(question.id + 1);
     let prevQuestionId = question.id;
 
+    // Check if this is a new question or a revisited one
+    const storedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
+    const isNewQuestion = !storedData[nextQ.id];
+    
+    if (isNewQuestion) {
+      timer.current = true; // Reset timer state only for new questions
+      setTimerResetKey(prev => prev + 1); // Force timer reset only for new questions
+    }
+
     setQuestion(nextQ);
     setLoading(false);
+    
     // store the fetched question in localStorage
-    const storedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
-    storedData[nextQ.id] = { question: nextQ, selected: null, prevQuestionId: prevQuestionId };
+    if (isNewQuestion) {
+      storedData[nextQ.id] = { question: nextQ, selected: null, prevQuestionId: prevQuestionId };
+    } else {
+      // Update prevQuestionId for revisited question
+      storedData[nextQ.id].prevQuestionId = prevQuestionId;
+    }
     localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(storedData));
     console.log('ironman localStorage ', localStorage.getItem(LOCAL_STORAGE_KEY));
   }
@@ -73,11 +89,10 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
   function handlePrev() {
       const storedData = JSON.parse(localStorage.getItem(LOCAL_STORAGE_KEY));
       let prevQuestionId = storedData[question.id].prevQuestionId;
-      if (prevQuestionId === null) return;
+      if (prevQuestionId === null || prevQuestionId === undefined) return;
       const prevQ = storedData[prevQuestionId];
       setQuestion(prevQ.question);
       setSelected(prevQ.selected);
-      prevQuestionId = prevQ.prevQuestionId;
       console.log('ironman localStorage ', localStorage.getItem(LOCAL_STORAGE_KEY));
   }
   return (
@@ -85,10 +100,12 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
       <Header />
       <QuestionPanel loading={loading} question={question}>
         <Timer 
+          key={timerResetKey} // Reset timer only when going to next question
           duration={maxTimePerQuestion} 
           onExpire={() => {
             timer.current = false;
           }} 
+          disabled={false}
         />
       </QuestionPanel>
       {loading ? (
