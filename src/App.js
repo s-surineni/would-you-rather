@@ -29,7 +29,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
   const [question, setQuestion] = useState(null);
   let timer = useRef(true);
   const [selected, setSelected] = useState(null);
-  const [timerResetKey, setTimerResetKey] = useState(0);
+  const [timerResetKey, setTimerResetKey] = useState(null);
   useEffect(() => {
     const fetchQ = async () => {
       const question = await fetchQuestion(0);
@@ -40,6 +40,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
         { [question.id]: { question: question, selected: null }}
       )
       );
+      setTimerResetKey(question.id); // Initialize timer key
       setLoading(false);
       console.log('ironman question', question);
       console.log('ironman localStorage ', localStorage.getItem(LOCAL_STORAGE_KEY));
@@ -69,7 +70,7 @@ export default function App({ maxTimePerQuestion = 5 /* seconds */ }) {
     
     if (isNewQuestion) {
       timer.current = true; // Reset timer state only for new questions
-      setTimerResetKey(prev => prev + 1); // Force timer reset only for new questions
+      setTimerResetKey(nextQ.id); // Use question ID as reset key for new questions
     }
 
     setQuestion(nextQ);
